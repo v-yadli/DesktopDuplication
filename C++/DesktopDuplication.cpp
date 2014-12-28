@@ -168,6 +168,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
     OutMgr.MapDDSBuffer();
 
+    //Forcibly point to the third display.
+    if (SingleOutput == -1)
+        SingleOutput = 2;
+
     // Event used by the threads to signal an unexpected error and we want to quit the app
     UnexpectedErrorEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
     if (!UnexpectedErrorEvent)

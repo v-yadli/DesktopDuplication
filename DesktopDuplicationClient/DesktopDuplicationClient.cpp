@@ -171,6 +171,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
             // could put more update code in here
             // before drawing.
             DrawDDSBuffer();
+            Sleep(15);
         }
     }
 
@@ -326,6 +327,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         EndPaint(hWnd, &ps);
         break;
     case WM_DESTROY:
+    case WM_LBUTTONDBLCLK:
         PostQuitMessage(0);
         break;
     default:
