@@ -626,6 +626,7 @@ DUPL_RETURN OUTPUTMANAGER::DrawFrame()
     m_DeviceContext->IASetVertexBuffers(0, 1, &VertexBuffer, &Stride, &Offset);
 
     // Draw textured quad onto render target
+
     m_DeviceContext->Draw(NUMVERTICES, 0);
 
     VertexBuffer->Release();

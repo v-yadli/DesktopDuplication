@@ -263,12 +263,89 @@ void InitBitmap()
     blendFunc.AlphaFormat = AC_SRC_ALPHA;
 }
 
+int checksum = 0;
+typedef int SCREEN_BUFFER_LINE[768];
+typedef uint8_t POINT_VEC[4];
+typedef float POINT_VEC_DEST[4];
+
+SCREEN_BUFFER_LINE convolution_result[1366];
+
+inline void VecAdd(POINT_VEC_DEST& v1, POINT_VEC& v2, float mul)
+{
+    v1[0] += v2[0] * mul;
+    v1[1] += v2[1] * mul;
+    v1[2] += v2[2] * mul;
+    //v1[3] += v2[3] * mul;
+}
+
+inline void VecSeal(POINT_VEC_DEST& v)
+{
+    if (v[0] < 0)
+        v[0] = 0;
+    if (v[0] > 255)
+        v[0] = 255;
+    if (v[1] < 0)
+        v[1] = 0;
+    if (v[1] > 255)
+        v[1] = 255;
+    if (v[2] < 0)
+        v[2] = 0;
+    if (v[2] > 255)
+        v[2] = 255;
+    //if (v[3] < 0)
+    //    v[3] = 0;
+    //if (v[3] > 255)
+    //    v[3] = 255;
+}
+
+inline int DoConvolution(SCREEN_BUFFER_LINE buffer[], int x, int y)
+{
+    if (x == 0 || x == 767 || y == 0 || y == 1365)
+        return buffer[y][x];
+
+    POINT_VEC *current_point = (POINT_VEC*) &(buffer[y][x]);
+    POINT_VEC *p1 = (POINT_VEC*) &(buffer[y-1][x]);
+    POINT_VEC *p2 = (POINT_VEC*) &(buffer[y+1][x]);
+    POINT_VEC *p3 = (POINT_VEC*) &(buffer[y][x-1]);
+    POINT_VEC *p4 = (POINT_VEC*) &(buffer[y][x+1]);
+
+    POINT_VEC_DEST result ={ .0f, .0f, .0f, .0f };
+
+    VecAdd(result, *current_point, 5);
+    VecAdd(result, *p1, -1);
+    VecAdd(result, *p2, -1);
+    VecAdd(result, *p3, -1);
+    VecAdd(result, *p4, -1);
+
+    VecSeal(result);
+
+    int ret = (short)result[0] | ((short)result[1] << 8) | ((short)result[2] << 16) | ((short)result[3] << 24);
+    return ret;
+}
+
 void DrawDDSBuffer()
 {
     if (bitmap == NULL)
         InitBitmap();
 
-    if (!SetBitmapBits(bitmap, 1366 * 768 * 4, m_DDSBuffer))
+    int current_checksum = 0;
+    SCREEN_BUFFER_LINE *buffer_ptr = (SCREEN_BUFFER_LINE*)m_DDSBuffer;
+
+    //for (int y = 0; y < 1366; ++y)
+    //    for (int x = 0; x < 768; ++x)
+    //        current_checksum += buffer_ptr[y][x];
+
+    //if (current_checksum == checksum)
+    //    return;
+
+    //checksum = current_checksum;
+
+    for (int y = 0; y < 1366; ++y)
+        for (int x = 0; x < 768; ++x)
+            convolution_result[y][x] = DoConvolution(buffer_ptr, x, y);
+
+
+    if (!SetBitmapBits(bitmap, 1366 * 768 * 4, convolution_result))
         throw "BitmapBits";
 
     PTR_INFO *ptr_info = (PTR_INFO*) (m_DDSBuffer + MOUSE_PTR_INFO_OFFSET);
