@@ -283,7 +283,13 @@ void DrawDDSBuffer()
         GetCursorInfo(&ci);
         DrawIconEx(mouseDC, 0, 0, ci.hCursor, 0, 0, 0, NULL, DI_NORMAL);
 
-        AlphaBlend(bitmapDC, ptr_info->Position.x, ptr_info->Position.y, 32, 32, mouseDC, 0, 0, 32, 32, blendFunc);
+        LONG ptr_x = ptr_info->Position.x;
+        LONG ptr_y = ptr_info->Position.y;
+
+        ptr_x = ptr_x * 768 / 480;
+        ptr_y = ptr_y * 1366 / 848;
+
+        AlphaBlend(bitmapDC, ptr_x, ptr_y, 32, 32, mouseDC, 0, 0, 32, 32, blendFunc);
     }
 
     //Commit to front buffer
