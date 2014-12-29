@@ -171,7 +171,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
             // could put more update code in here
             // before drawing.
             DrawDDSBuffer();
-            Sleep(15);
+            Sleep(33);
         }
     }
 
@@ -252,8 +252,6 @@ void InitBitmap()
     SelectObject(bitmapDC, bitmap);
     pen = CreatePen(PS_DASHDOTDOT, 2, NULL);
 
-    mouseDC = CreateCompatibleDC(windowDC);
-    mouseBitmap = CreateCompatibleBitmap(windowDC, 32, 32);
 
     SelectObject(mouseDC, mouseBitmap);
 
@@ -304,10 +302,10 @@ inline int DoConvolution(SCREEN_BUFFER_LINE buffer[], int x, int y)
         return buffer[y][x];
 
     POINT_VEC *current_point = (POINT_VEC*) &(buffer[y][x]);
-    POINT_VEC *p1 = (POINT_VEC*) &(buffer[y-1][x]);
-    POINT_VEC *p2 = (POINT_VEC*) &(buffer[y+1][x]);
-    POINT_VEC *p3 = (POINT_VEC*) &(buffer[y][x-1]);
-    POINT_VEC *p4 = (POINT_VEC*) &(buffer[y][x+1]);
+    POINT_VEC *p1 = (POINT_VEC*) &(buffer[y - 1][x]);
+    POINT_VEC *p2 = (POINT_VEC*) &(buffer[y + 1][x]);
+    POINT_VEC *p3 = (POINT_VEC*) &(buffer[y][x - 1]);
+    POINT_VEC *p4 = (POINT_VEC*) &(buffer[y][x + 1]);
 
     POINT_VEC_DEST result ={ .0f, .0f, .0f, .0f };
 
@@ -319,7 +317,7 @@ inline int DoConvolution(SCREEN_BUFFER_LINE buffer[], int x, int y)
 
     VecSeal(result);
 
-    int ret = (short)result[0] | ((short)result[1] << 8) | ((short)result[2] << 16) | ((short)result[3] << 24);
+    int ret = (short) result[0] | ((short) result[1] << 8) | ((short) result[2] << 16) | ((short) result[3] << 24);
     return ret;
 }
 
@@ -329,7 +327,7 @@ void DrawDDSBuffer()
         InitBitmap();
 
     int current_checksum = 0;
-    SCREEN_BUFFER_LINE *buffer_ptr = (SCREEN_BUFFER_LINE*)m_DDSBuffer;
+    SCREEN_BUFFER_LINE *buffer_ptr = (SCREEN_BUFFER_LINE*) m_DDSBuffer;
 
     //for (int y = 0; y < 1366; ++y)
     //    for (int x = 0; x < 768; ++x)
@@ -351,14 +349,15 @@ void DrawDDSBuffer()
     PTR_INFO *ptr_info = (PTR_INFO*) (m_DDSBuffer + MOUSE_PTR_INFO_OFFSET);
     if (ptr_info->Visible)
     {
-        //SelectObject(hdc, pen);
-        //Ellipse(hdc, ptr_info->Position.x, ptr_info->Position.y, ptr_info->Position.x + 5, ptr_info->Position.y + 5);
-        //TransparentBlt(hdc, ptr_info->Position.x, ptr_info->Position.y, 32, 32, mouseDC, 0, 0, 32, 32, 0x00000000);
         CURSORINFO ci;
         ci.cbSize = sizeof(ci);
-        ci.flags = CURSOR_SHOWING;
+        ci.flags = CURSOR_SHOWING | CURSOR_SUPPRESSED;
         GetCursorInfo(&ci);
-        DrawIconEx(mouseDC, 0, 0, ci.hCursor, 0, 0, 0, NULL, DI_NORMAL);
+
+        //mouseDC = CreateCompatibleDC(windowDC);
+        //mouseBitmap = CreateCompatibleBitmap(windowDC, 32, 32);
+        //SelectObject(mouseDC, mouseBitmap);
+        //DrawIconEx(mouseDC, 0, 0, ci.hCursor, 0, 0, 0, NULL, DI_NORMAL);
 
         LONG ptr_x = ptr_info->Position.x;
         LONG ptr_y = ptr_info->Position.y;
@@ -366,7 +365,19 @@ void DrawDDSBuffer()
         ptr_x = ptr_x * 768 / 480;
         ptr_y = ptr_y * 1366 / 848;
 
-        AlphaBlend(bitmapDC, ptr_x, ptr_y, 32, 32, mouseDC, 0, 0, 32, 32, blendFunc);
+        POINT cursor[3];
+        cursor[0].x = ptr_x;
+        cursor[0].y = ptr_y;
+        cursor[1].x = ptr_x + 32;
+        cursor[1].y = ptr_y + 32;
+        cursor[2].x = ptr_x;
+        cursor[2].y = ptr_y + 32;
+
+        Polygon(bitmapDC, cursor, 3);
+
+        //AlphaBlend(bitmapDC, ptr_x, ptr_y, 32, 32, mouseDC, 0, 0, 32, 32, blendFunc);
+        //DeleteDC(mouseDC);
+        //DeleteObject(mouseBitmap);
     }
 
     //Commit to front buffer
