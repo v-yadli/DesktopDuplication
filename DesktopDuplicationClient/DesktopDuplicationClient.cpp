@@ -154,6 +154,8 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
     //    }
     //}
 
+    int loop_tick = 0;
+
     while (TRUE)
     {
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -172,6 +174,15 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
             // before drawing.
             DrawDDSBuffer();
             Sleep(26);
+            if (++loop_tick >= 100)
+            {
+                int x = rand() % 500;
+                int y = rand() % 500;
+
+                SetCursorPos(x, y);
+
+                loop_tick = 0;
+            }
         }
     }
 
@@ -379,7 +390,7 @@ void DrawDDSBuffer()
         ptr_x = ptr_x * 768 / 480;
         ptr_y = ptr_y * 1366 / 848;
 
-        if (old_ptr_x != ptr_x || old_ptr_y != ptr_y || !old_visible)
+        //if (old_ptr_x != ptr_x || old_ptr_y != ptr_y || !old_visible)
         {
             POINT cursor[3];
             cursor[0].x = ptr_x;
