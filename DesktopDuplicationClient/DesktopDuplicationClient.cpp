@@ -32,69 +32,15 @@ HBITMAP mouseBitmap     = NULL;
 HDC mouseDC             = NULL;
 BLENDFUNCTION blendFunc;
 
-
-BOOL SetPrivilege(
-    HANDLE hToken,          // access token handle
-    LPCTSTR lpszPrivilege,  // name of privilege to enable/disable
-    BOOL bEnablePrivilege   // to enable or disable privilege
-    )
-{
-    TOKEN_PRIVILEGES tp;
-    LUID luid;
-
-    if (!LookupPrivilegeValue(
-        NULL,            // lookup privilege on local system
-        lpszPrivilege,   // privilege to lookup 
-        &luid))        // receives LUID of privilege
-    {
-        return FALSE;
-    }
-
-    tp.PrivilegeCount = 1;
-    tp.Privileges[0].Luid = luid;
-    if (bEnablePrivilege)
-        tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-    else
-        tp.Privileges[0].Attributes = 0;
-
-    // Enable the privilege or disable all privileges.
-
-    if (!AdjustTokenPrivileges(
-        hToken,
-        FALSE,
-        &tp,
-        sizeof(TOKEN_PRIVILEGES),
-        (PTOKEN_PRIVILEGES) NULL,
-        (PDWORD) NULL))
-    {
-        return FALSE;
-    }
-
-    if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
-
-    {
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
+// Forward declarations of functions included in this code module:
+ATOM				MyRegisterClass(HINSTANCE hInstance);
+BOOL				InitInstance(HINSTANCE, int);
+LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
+VOID                DrawDDSBuffer();
 
 void MapDDSBuffer()
 {
-
-    HANDLE hToken;
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
-    {
-        exit(-1);
-    }
-    if (!SetPrivilege(hToken, SE_CREATE_GLOBAL_NAME, TRUE))
-    {
-        exit(-1);
-    }
-    CloseHandle(hToken);
-
-
     m_MappedDDSBufferHandle = OpenFileMapping(
         FILE_MAP_ALL_ACCESS,
         FALSE,
@@ -110,13 +56,6 @@ void MapDDSBuffer()
                                         DDS_BUFFER_SIZE);
 }
 
-
-// Forward declarations of functions included in this code module:
-ATOM				MyRegisterClass(HINSTANCE hInstance);
-BOOL				InitInstance(HINSTANCE, int);
-LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
-VOID                DrawDDSBuffer();
 
 int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
                        _In_opt_ HINSTANCE hPrevInstance,
@@ -144,18 +83,9 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 
     hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_DESKTOPDUPLICATIONCLIENT));
 
-    // Main message loop:
-    //while (GetMessage(&msg, NULL, 0, 0))
-    //{
-    //    if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-    //    {
-    //        TranslateMessage(&msg);
-    //        DispatchMessage(&msg);
-    //    }
-    //}
-
     int loop_tick = 0;
 
+    // Main loop
     while (TRUE)
     {
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
