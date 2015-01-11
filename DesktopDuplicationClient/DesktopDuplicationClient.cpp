@@ -170,10 +170,8 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
         }
         else
         {
-            // could put more update code in here
-            // before drawing.
             DrawDDSBuffer();
-            Sleep(26);
+            Sleep(20);
             if (++loop_tick >= 100)
             {
                 int x = rand() % 500;
@@ -344,8 +342,6 @@ void DrawDDSBuffer()
     int current_checksum = 0;
     SCREEN_BUFFER_LINE *buffer_ptr = (SCREEN_BUFFER_LINE*) m_DDSBuffer;
 
-    bool commit = false;
-
     for (int y = 0; y < 1366; ++y)
         for (int x = 0; x < 768; ++x)
             current_checksum += buffer_ptr[y][x];
@@ -362,71 +358,36 @@ void DrawDDSBuffer()
             }
 
         }
-        if (!SetBitmapBits(bitmap, 1366 * 768 * 4, convolution_result))
-            throw "BitmapBits";
 
-        commit = true;
     }
 
-    static LONG old_ptr_x;
-    static LONG old_ptr_y;
-    static BOOL old_visible;
+    if (!SetBitmapBits(bitmap, 1366 * 768 * 4, convolution_result))
+        throw "BitmapBits";
 
     PTR_INFO *ptr_info = (PTR_INFO*) (m_DDSBuffer + MOUSE_PTR_INFO_OFFSET);
     if (ptr_info->Visible)
     {
-        //CURSORINFO ci;
-        //ci.cbSize = sizeof(ci);
-        //ci.flags = CURSOR_SHOWING | CURSOR_SUPPRESSED;
-        //GetCursorInfo(&ci);
-
-        //DrawIconEx(mouseDC, 0, 0, ci.hCursor, 0, 0, 0, NULL, DI_NORMAL);
-
-
-
         LONG ptr_x = ptr_info->Position.x;
         LONG ptr_y = ptr_info->Position.y;
 
         ptr_x = ptr_x * 768 / 480;
         ptr_y = ptr_y * 1366 / 848;
 
-        //if (old_ptr_x != ptr_x || old_ptr_y != ptr_y || !old_visible)
-        {
-            POINT cursor[3];
-            cursor[0].x = ptr_x;
-            cursor[0].y = ptr_y;
-            cursor[1].x = ptr_x + 31;
-            cursor[1].y = ptr_y + 31;
-            cursor[2].x = ptr_x;
-            cursor[2].y = ptr_y + 31;
+        POINT cursor[3];
+        cursor[0].x = ptr_x;
+        cursor[0].y = ptr_y;
+        cursor[1].x = ptr_x + 31;
+        cursor[1].y = ptr_y + 31;
+        cursor[2].x = ptr_x;
+        cursor[2].y = ptr_y + 31;
 
-            //Polygon(bitmapDC, cursor, 3);
+        //Polygon(bitmapDC, cursor, 3);
 
-            if (!commit)
-                BitBlt(bitmapDC, old_ptr_x, old_ptr_y, 32, 32, mouseDC, 0, 0, SRCCOPY);
-            BitBlt(mouseDC, 0, 0, 32, 32, bitmapDC, ptr_x, ptr_y, SRCCOPY);
-            Polygon(bitmapDC, cursor, 3);
-
-            //AlphaBlend(bitmapDC, ptr_x, ptr_y, 32, 32, mouseDC, 0, 0, 32, 32, blendFunc);
-            //AlphaBlend(windowDC, ptr_x, ptr_y, 32, 32, mouseDC, 0, 0, 32, 32, blendFunc);
-            //DeleteDC(mouseDC);
-            //DeleteObject(mouseBitmap);
-
-            old_ptr_x = ptr_x;
-            old_ptr_y = ptr_y;
-
-            commit = true;
-
-        }
+        Polygon(bitmapDC, cursor, 3);
     }
-    old_visible = ptr_info->Visible;
 
-
-    if (commit)
-    {
-        //Commit to front buffer
-        BitBlt(windowDC, 0, 0, 768, 1366, bitmapDC, 0, 0, SRCCOPY);
-    }
+    //Commit to front buffer
+    BitBlt(windowDC, 0, 0, 768, 1366, bitmapDC, 0, 0, SRCCOPY);
 
 }
 
