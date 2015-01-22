@@ -269,12 +269,16 @@ void DrawDDSBuffer()
     if (bitmap == NULL)
         InitBitmap();
 
-    int current_checksum = 0;
+    int current_checksum   = 0;
+    int current_checksum_2 = 0;
     SCREEN_BUFFER_LINE *buffer_ptr = (SCREEN_BUFFER_LINE*) m_DDSBuffer;
 
     for (int y = 0; y < 1366; ++y)
         for (int x = 0; x < 768; ++x)
-            current_checksum += buffer_ptr[y][x];
+        {
+            current_checksum   += buffer_ptr[y][x];
+            current_checksum_2 += current_checksum;
+        }
 
     if (current_checksum != checksum)
     {
